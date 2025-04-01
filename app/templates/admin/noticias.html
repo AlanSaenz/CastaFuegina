@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">Administración de Noticias</h2>
+
+    <!-- Formulario para agregar una noticia -->
+    <div class="card p-4 shadow-sm" style="transform: scale(1)">
+        <h4>Agregar Noticia</h4>
+        <form action="{{ url_for('routes.agregar_noticia') }}" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="titulo" class="form-label">Título</label>
+                <input type="text" id="titulo" name="titulo" class="form-control" required>
+            </div>
+    
+            <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción</label>
+                <textarea id="descripcion" name="descripcion" class="form-control" rows="3" required></textarea>
+            </div>
+    
+            <!-- Checkbox para imágenes -->
+            <div class="form-check mb-2">
+                <input type="checkbox" id="poseeImg" name="poseeImg" class="form-check-input">
+                <label class="form-check-label" for="poseeImg">¿Tiene imagen?</label>
+            </div>
+    
+            <!-- Input para subir imágenes (oculto por defecto) -->
+            <div id="inputImagenes" class="mb-3" style="display: none;">
+                <label for="imagenes" class="form-label">Subir imágenes</label>
+                <input type="file" id="imagenes" name="imagenes" class="form-control" accept="image/*" multiple>
+            </div>
+    
+            <!-- Checkbox para video -->
+            <div class="form-check mb-2">
+                <input type="checkbox" id="poseeVid" name="poseeVid" class="form-check-input">
+                <label class="form-check-label" for="poseeVid">¿Tiene video?</label>
+            </div>
+    
+            <!-- Input para subir video (oculto por defecto) -->
+            <div id="inputVideo" class="mb-3" style="display: none;">
+                <label for="video" class="form-label">Subir video</label>
+                <input type="file" id="video" name="video" class="form-control" accept="video/*">
+            </div>
+    
+            <button type="submit" class="btn btn-primary w-100">Agregar Noticia</button>
+        </form>
+    </div>
+
+    <hr class="my-4">
+    
+    <!-- Lista de noticias existentes -->
+    <h3 class="text-center">Noticias existentes</h3>
+    <div class="row">
+        {% for noticia in noticias %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ noticia.titulo }}</h5>
+
+                    {% if noticia.poseeImg %}
+                    <!-- Carrusel de imágenes con tamaño fijo -->
+                    <div id="carouselNoticia{{ noticia.id }}" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            {% for imagen in noticia.imagenes %}
+                            <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                <img src="{{ url_for('static', filename='uploads/' + imagen.archivo) }}" class="d-block w-100" alt="Imagen de la noticia">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselNoticia{{ noticia.id }}" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselNoticia{{ noticia.id }}" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    {% if noticia.poseeVid %}
+                    <!-- Video con tamaño fijo -->
+                    <div class="mt-3">
+                        <video controls class="w-100" style="height: 450px; object-fit: cover;">
+                            <source src="{{ url_for('static', filename='uploads/' + noticia.video) }}" type="video/mp4">
+                            Tu navegador no soporta el formato de video.
+                        </video>
+                    </div>
+                    {% endif %}
+
+                    <p class="card-text">{{ noticia.descripcion }}</p>
+                    <p class="text-muted"><small>Publicado el {{ noticia.fecha_publicacion.strftime('%d/%m/%Y') }}</small></p>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a href="{{ url_for('routes.editar_noticia', noticia_id=noticia.id) }}" class="btn btn-warning">Editar</a>
+                    <form action="{{ url_for('routes.eliminar_noticia', noticia_id=noticia.id) }}" method="POST">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de eliminar esta noticia?');">Eliminar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h2>📢 Comentarios de la Página</h2>
+    <table class="tabla-comentarios">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Comentario</th>
+                <th>Fecha</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comentario in comentarios %}
+            <tr id="comentario-{{ comentario.id }}">
+                <td>{{ comentario.nombre }}</td>
+                <td>{{ comentario.texto }}</td>
+                <td>{{ comentario.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>
+                    <button class="eliminar-btn" data-id="{{ comentario.id }}">🗑 Eliminar</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let checkboxImagen = document.getElementById("poseeImg");
+        let inputImagenes = document.getElementById("inputImagenes");
+
+        let checkboxVideo = document.getElementById("poseeVid");
+        let inputVideo = document.getElementById("inputVideo");
+
+        // Mostrar/ocultar input de imágenes
+        checkboxImagen.addEventListener("change", function () {
+            inputImagenes.style.display = this.checked ? "block" : "none";
+        });
+
+        // Mostrar/ocultar input de video
+        checkboxVideo.addEventListener("change", function () {
+            inputVideo.style.display = this.checked ? "block" : "none";
+        });
+    });
+
+    document.querySelectorAll(".eliminar-btn").forEach(button => {
+        button.addEventListener("click", function() {
+            let id = this.getAttribute("data-id");
+            eliminarComentario(id);
+        });
+    });
+
+    function eliminarComentario(id) {
+        Swal.fire({
+            title: "¿Estás seguro?",
+            text: "Esta acción no se puede deshacer.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/eliminar_comentario/${id}`, { method: "POST" })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById(`comentario-${id}`).remove();
+                        Swal.fire({
+                            title: "Eliminado",
+                            text: "El comentario ha sido eliminado.",
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire("Error", "No se pudo eliminar el comentario.", "error");
+                    }
+                })
+                .catch(error => {
+                    Swal.fire("Error", "Hubo un problema con la solicitud.", "error");
+                });
+            }
+        });
+    }
+</script>    
+{% endblock %}

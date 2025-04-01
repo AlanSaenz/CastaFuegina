@@ -1,0 +1,287 @@
+.carousel-item img {
+    width: 100%; 
+    height: 450px; /* Puedes ajustar la altura según el diseño deseado */
+    object-fit: cover; /* Mantiene la proporción y recorta el exceso */
+    border-radius: 8px; /* Opcional: redondea los bordes */
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: scale(1.03);
+}
+
+.card img {
+    height: 200px;
+    object-fit: cover;
+}
+
+aside {
+    position: sticky;
+    top: 10px;
+}
+
+.btn-primary {
+    background-color: #ff6600;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #cc5200;
+}
+
+/* Hora más grande y centrada */
+.hora-texto {
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Estilos para el reproductor de radio */
+#play-radio {
+    font-size: 1.2rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#volumen-radio {
+    flex-grow: 1;
+    accent-color: #ff6600; /* Cambia el color del control de volumen */
+    filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.5)); /* Sombra sutil */
+}
+
+.flightradar-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.flightradar-btn {
+    background-color: #cc5200; /* Color naranja principal */
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 12px 20px;
+    border-radius: 8px;
+    transition: background 0.3s, transform 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.flightradar-btn:hover {
+    background-color: #e68900; /* Un tono más oscuro al pasar el cursor */
+    transform: scale(1.05);
+}
+
+
+/* Estilos para los comentarios */
+.lista-comentarios {
+    list-style-type: none;
+    padding: 0;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.comentario {
+    border-bottom: 1px solid #ddd;
+    padding: 5px 0;
+}
+
+.comentario strong {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+/* 🔹 Estilos para el botón del menú */
+#menu-toggle {
+    display: none; /* Oculto en pantallas grandes */
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: transparent;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* 🔹 Estilos para el sidebar en mobile */
+@media (max-width: 768px) {
+    #menu-toggle {
+        display: block; /* Se muestra solo en móviles */
+    }
+
+    header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    h1 {
+        margin-left: 40px; /* Separa el título del botón */
+    }
+
+    aside {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 250px;
+        height: 100vh; /* Usa toda la altura de la pantalla */
+        background-color: #212529;
+        padding: 20px;
+        transition: left 0.3s ease-in-out;
+        z-index: 1000;
+        overflow-y: auto; /* Permite desplazarse verticalmente */
+        max-height: 100vh; /* Asegura que no sobresalga */
+    }
+
+    aside.show {
+        left: 0; /* Se muestra el menú */
+        width: 350px;
+    }
+
+    aside::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    aside::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.5);
+        border-radius: 3px;
+    }
+    
+    aside::-webkit-scrollbar-track {
+        background-color: transparent;
+    }    
+
+    /* 🔹 Fondo oscuro al abrir el menú */
+    .menu-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+
+    .menu-overlay.active {
+        display: block;
+    }
+
+    #div-principal{
+        flex-wrap: wrap;
+    }
+}
+
+.contenido-principal {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    width: 80%;
+}
+
+.noticias-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    width: 100%;
+}
+
+.noticia-bloque {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    width: 450px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
+}
+
+.noticia-bloque:hover {
+    transform: scale(1.05);
+}
+
+.noticia-contenido {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.noticia-media {
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.noticia-media img,
+.noticia-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.noticia-texto {
+    margin-top: 10px;
+}
+
+.noticia-texto h3 {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.noticia-texto p {
+    font-size: 14px;
+    color: gray;
+}
+
+#div-principal{
+    flex-wrap: nowrap;
+    justify-content: center;
+}
+
+/* admin css */
+
+.tabla-comentarios {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.tabla-comentarios th, .tabla-comentarios td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.tabla-comentarios th {
+    background-color: #ff9800;
+    color: white;
+}
+
+.eliminar-btn {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.eliminar-btn:hover {
+    background-color: darkred;
+}

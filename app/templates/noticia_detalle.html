@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}{{ noticia.titulo }}{% endblock %}
+
+{% block content %}
+<!-- Estilos personalizados CSS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles_n.css') }}">
+
+<div class="noticia-container">
+    <!-- Botón de volver arriba -->
+    <a href="{{ url_for('routes.index') }}" class="volver-arriba">← Volver</a>
+
+    <!-- Título de la noticia -->
+    <h1 class="noticia-titulo">{{ noticia.titulo }}</h1>
+    <p class="noticia-fecha">🕒 Publicado el {{ noticia.fecha_publicacion.strftime('%d/%m/%Y %H:%M') }}</p>
+    <p class="noticia-subtitulo">{{ noticia.subtitulo }}</p>
+
+    <!-- Imagen principal o video si no hay imágenes -->
+    {% if noticia.poseeImg and noticia.imagenes %}
+        <div class="noticia-imagen-principal">
+            <img src="{{ url_for('static', filename='uploads/' + noticia.imagenes[0].archivo) }}" alt="Imagen principal">
+        </div>
+    {% elif noticia.poseeVid and noticia.video %}
+        <div class="noticia-video">
+            <iframe width="700" height="450" src="{{ url_for('static', filename='uploads/' + noticia.video) }}" frameborder="0" allowfullscreen></iframe>
+        </div>
+    {% endif %}
+
+    <!-- Descripción de la noticia -->
+    <div class="noticia-descripcion">
+        <p>{{ noticia.descripcion }}</p>
+    </div>
+
+    <!-- Carrusel de imágenes (sin la primera imagen) -->
+    {% if noticia.poseeImg and noticia.imagenes|length > 1 %}
+    <div id="noticiaCarrusel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            {% for imagen in noticia.imagenes[1:] %}
+            <div class="carousel-item {% if loop.first %}active{% endif %}">
+                <img src="{{ url_for('static', filename='uploads/' + imagen.archivo) }}" class="d-block w-100" alt="Imagen secundaria">
+            </div>
+            {% endfor %}
+        </div>
+        {% if noticia.imagenes|length > 2 %}
+            <a class="carousel-control-prev" href="#noticiaCarrusel" role="button" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </a>
+            <a class="carousel-control-next" href="#noticiaCarrusel" role="button" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Sección de comentarios -->
+<div class="noticia-container">
+    <div class="comentarios-container">
+        <h2>Comentarios</h2>
+
+        <!-- Formulario de comentario -->
+        <form id="comentario-form">
+            <input type="text" name="nombre" placeholder="Tu nombre" required>
+            <textarea name="comentario" placeholder="Escribe tu comentario aquí..." required></textarea>
+            <button type="submit">Comentar</button>
+        </form>
+
+        <!-- Lista de comentarios paginados -->
+        <div id="comentarios-lista"></div>
+        <div id="paginacion" class="paginacion"></div>
+        <button id="btn-cargar-mas" style="display: none;">Cargar más</button>
+        <a href="{{ url_for('routes.index') }}" class="volver-btn">← Volver al Inicio</a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    let paginaActual = 1;
+    let totalPaginas = 1;
+
+    function cargarComentarios(pagina = 1, append = false) {
+        fetch(`/noticia/{{ noticia.id }}/comentarios?page=${pagina}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!append) {
+                    document.getElementById("comentarios-lista").innerHTML = "";
+                }
+
+                if (data.comentarios.length > 0) {
+                    data.comentarios.forEach(comentario => {
+                        document.getElementById("comentarios-lista").innerHTML += `
+                            <div class="comentario">
+                                <strong>${comentario.nombre}</strong> <span class="fecha">${comentario.fecha}</span>
+                                <p>${comentario.texto}</p>
+                            </div>`;
+                    });
+
+                    totalPaginas = data.total_paginas;
+                    paginaActual = data.pagina;
+
+                    // Mostrar o esconder el botón "Cargar más"
+                    let btnCargarMas = document.getElementById("btn-cargar-mas");
+                    if (paginaActual < totalPaginas) {
+                        btnCargarMas.style.display = "block";
+                    } else {
+                        btnCargarMas.style.display = "none";
+                    }
+                }
+            });
+    }
+
+    document.getElementById("comentario-form").addEventListener("submit", function (event) {
+        event.preventDefault();
+        let formData = new FormData(this);
+
+        fetch(`/noticia/{{ noticia.id }}/comentar`, {
+            method: "POST",
+            body: formData
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                cargarComentarios(1, false); // Recargar desde la página 1
+            }
+        });
+
+        this.reset();
+    });
+
+    document.getElementById("btn-cargar-mas").addEventListener("click", function () {
+        if (paginaActual < totalPaginas) {
+            cargarComentarios(paginaActual + 1, true);
+        }
+    });
+
+    cargarComentarios();
+});
+</script>
+{% endblock %}

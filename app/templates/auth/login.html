@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center vh-100">
+    <div class="card p-4 shadow-lg" style="max-width: 400px; width: 100%;">
+        <h2 class="text-center mb-4">Iniciar Sesión</h2>
+
+        <form method="POST">
+            <div class="mb-3">
+                <label for="user" class="form-label">Usuario:</label>
+                <input type="text" id="user" name="user" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">Contraseña:</label>
+                <div class="input-group">
+                    <input type="password" id="password" name="password" class="form-control" required>
+                    <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+                        👁
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelector("form").addEventListener("submit", function(event) {
+            event.preventDefault(); // Evita la recarga de la página
+            
+            let formData = new FormData(this);
+
+            fetch("{{ url_for('auth.login') }}", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.fire({
+                    icon: data.status,
+                    title: data.message,
+                    confirmButtonColor: '#3085d6',
+                }).then(() => {
+                    if (data.status === "success") {
+                        window.location.href = data.redirect; // Redirigir solo si el login fue exitoso
+                    }
+                });
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    });
+</script>
+
+<!-- Script para mostrar/ocultar contraseña -->
+<script>
+    document.getElementById("togglePassword").addEventListener("click", function () {
+        let passwordField = document.getElementById("password");
+        passwordField.type = passwordField.type === "password" ? "text" : "password";
+    });
+</script>
+
+{% endblock %}

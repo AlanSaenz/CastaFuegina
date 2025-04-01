@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - Mi Portal de Noticias{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row" id="div-principal">
+        <!-- Sidebar -->
+        <aside class="col-md-3" id="sidebar">
+            <button id="menu-toggle" class="btn btn-outline-light">☰ Menú</button>
+
+            <!-- Hora Actual -->
+            <div class="card text-center p-3 mb-4">
+                <h5 class="card-title">🕒 Hora Actual</h5>
+                <p id="hora-actual" class="hora-texto"></p>
+            </div>
+
+            <!-- Clima -->
+            <div class="card text-center p-3 mb-4">
+                <h5 class="card-title">🌦 Clima Actual en Río Grande</h5>
+                <p id="clima-info">Cargando...</p>
+            </div>
+
+            <!-- Radio Mejorada -->
+            <div class="card p-3 mb-4" id="contenedor-radio">
+                <h5 class="card-title text-center">📻 Radio en Vivo</h5>
+                <select id="seleccionar-radio" class="form-control mb-2">
+                    <option value="https://cdn.instream.audio:9037/stream">FM 96.3 - Radio Aire Libre</option>
+                    <option value="https://media.siglocero.net:8004/stream">FM 90.1 - Radio Fuego FM</option>
+                    <option value="http://streamall.alsolnet.com:443/radiofueguina">FM 96.9 - Radio La 97</option>
+                    <option value="https://stream.radioinfo.ar/p/6334/;live">FM 97.9 - Radio Argentina</option>
+                    <option value="http://streaming1.locucionar.com/proxy/afterfm991?mp=/stream">FM 99.1 - Radio After</option>
+                    <option value="http://streamall.alsolnet.com/estaciondelsigloaudio">FM 105.3 - Radio Estacion del Siglo</option>
+                    <option value="https://streamlky.alsolnet.com/fmmastersenlace">FM 107.3 - Radio FM Master</option>
+                    <option value="https://sa.mp3.icecast.magma.edge-access.net/sc_rad1">FM 92.1 - Radio Nacional</option>
+                </select>
+                <div class="d-flex align-items-center">
+                    <button id="play-radio" class="btn btn-primary me-2">▶</button>
+                    <input type="range" id="volumen-radio" min="0" max="1" step="0.1" value="0.5" class="form-range">
+                </div>
+                <audio id="radio-player"></audio>
+            </div>
+
+            <!-- FligtRadar24 -->
+            <div class="flightradar-container">
+                <a href="https://www.flightradar24.com/-53.66,-67.35/8" target="_blank" class="flightradar-btn">
+                    🌍 Ver Tráfico Aéreo en Vivo
+                </a>
+            </div>
+
+            <!-- Comentarios -->
+            <div class="card p-3">
+                <h5 class="card-title text-center">💬 Comentarios</h5>
+                <form id="comentario-form">
+                    <input type="text" name="nombre" placeholder="Tu Nombre" required class="form-control mb-2">
+                    <textarea name="texto" placeholder="Escribe tu comentario..." required class="form-control mb-2"></textarea>
+                    <button type="submit" class="btn btn-primary w-100">Enviar</button>
+                </form>
+                <ul id="lista-comentarios" class="mt-3 lista-comentarios">
+                    {% for comentario in comentarios %}
+                        <li class="comentario">
+                            <strong>{{ comentario.nombre }}</strong>
+                            <p>{{ comentario.texto }}</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Noticias -->
+        <div class="col-md-9 contenido-principal">
+            <div class="noticias-container">
+                {% for noticia in noticias %}
+                <a href="{{ url_for('routes.noticia_detalle', noticia_id=noticia.id) }}" class="noticia-bloque"> <!-- Aún en desarrollo -->
+                    <div class="noticia-contenido">
+                        {% if noticia.imagenes %}
+                        <!-- Carrusel de Imágenes -->
+                        <div class="noticia-media">
+                            <div id="carousel{{ noticia.id }}" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3500">
+                                <div class="carousel-inner">
+                                    {% for imagen in noticia.imagenes %}
+                                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                        <img src="{{ url_for('static', filename='uploads/' + imagen.archivo)}}" class="d-block w-100">
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {% elif noticia.video %}
+                        <!-- Video -->
+                        <div class="noticia-media">
+                            <video class="noticia-video" muted loop>
+                                <source src="{{ url_for('static', filename='uploads/' + noticia.video) }}" type="video/mp4">
+                                Tu navegador no soporta videos.
+                            </video>
+                        </div>
+
+                        {% else %}
+                        <!-- Imagen Predeterminada -->
+                        <div class="noticia-media">
+                            <img src="{{ url_for('static', filename='uploads/predeterminado.png') }}" class="d-block w-100">
+                        </div>
+                        {% endif %}
+
+                        <div class="noticia-texto">
+                            <h3>{{ noticia.titulo }}</h3>
+                            <p>{{ noticia.descripcion }}</p>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const menuToggle = document.getElementById("menu-toggle");
+        const sidebar = document.querySelector("aside");
+        const overlay = document.createElement("div");
+
+        overlay.classList.add("menu-overlay");
+        document.body.appendChild(overlay);
+
+        // 🔹 Alternar el menú al hacer clic en el botón
+        menuToggle.addEventListener("click", function () {
+            sidebar.classList.toggle("show");
+            overlay.classList.toggle("active");
+        });
+
+        // 🔹 Cerrar el menú si se hace clic fuera de él
+        overlay.addEventListener("click", function () {
+            sidebar.classList.remove("show");
+            overlay.classList.remove("active");
+        });
+
+        document.querySelectorAll(".noticia-video").forEach(video => {
+            video.addEventListener("mouseenter", () => video.play());
+            video.addEventListener("mouseleave", () => video.pause());
+        });
+
+    });
+
+    // Actualizar la hora en vivo
+    function actualizarHora() {
+        let now = new Date();
+        document.getElementById("hora-actual").innerText = now.toLocaleTimeString();
+    }
+    setInterval(actualizarHora, 1000);
+    actualizarHora();
+
+    // Clima
+    // fetch('/clima')
+    // .then(response => response.json())
+    // .then(data => {
+    //     document.getElementById('clima-info').innerText = `${data.descripcion}, ${data.temperatura}°C`;
+    // })
+    // .catch(error => {
+    //     console.error('Error al obtener el clima:', error);
+    //     document.getElementById('clima-info').innerText = 'No se pudo cargar la información del clima.';
+    // });
+
+    // Reproductor de radio mejorado
+    const radioPlayer = document.getElementById("radio-player");
+    const playButton = document.getElementById("play-radio");
+    const volumenControl = document.getElementById("volumen-radio");
+    const selectorRadio = document.getElementById("seleccionar-radio");
+
+    selectorRadio.addEventListener("change", () => {
+        radioPlayer.src = selectorRadio.value;
+        radioPlayer.play();
+        playButton.innerText = "⏸";
+    });
+
+    playButton.addEventListener("click", () => {
+        if (radioPlayer.paused) {
+            radioPlayer.play();
+            playButton.innerText = "⏸";
+        } else {
+            radioPlayer.pause();
+            playButton.innerText = "▶";
+        }
+    });
+
+    volumenControl.addEventListener("input", () => {
+        radioPlayer.volume = volumenControl.value;
+    });
+
+    // Comentarios dinámicos
+    document.getElementById("comentario-form").addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        let formData = new FormData(this);
+        fetch("{{ url_for('routes.agregar_comentario') }}", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                let nuevoComentario = document.createElement("li");
+                nuevoComentario.classList.add("comentario");
+                nuevoComentario.innerHTML = `<strong>${data.nombre}</strong><p>${data.texto}</p>`;
+                document.getElementById("lista-comentarios").prepend(nuevoComentario);
+                this.reset();
+                Swal.fire("¡Comentario agregado!", "", "success");
+            } else {
+                Swal.fire("Error", "No se pudo agregar el comentario", "error");
+            }
+        });
+    });
+
+</script>
+{% endblock %}

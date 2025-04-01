@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Noticia{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-lg p-4" style="transform: scale(1)">
+        <h2 class="text-center mb-4">Editar Noticia</h2>
+
+        <form method="POST" enctype="multipart/form-data">
+            <!-- Título -->
+            <div class="mb-3">
+                <label for="titulo" class="form-label">Título</label>
+                <input type="text" class="form-control" id="titulo" name="titulo" value="{{ noticia.titulo }}" required>
+            </div>
+
+            <!-- Subtítulo -->
+            <div class="mb-3">
+                <label for="subtitulo" class="form-label">Subtítulo</label>
+                <input type="text" class="form-control" id="subtitulo" name="subtitulo" value="{{ noticia.subtitulo }}" required>
+            </div>
+
+            <!-- Descripción -->
+            <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción</label>
+                <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required>{{ noticia.descripcion }}</textarea>
+            </div>
+
+            <!-- Imágenes -->
+            <div class="mb-3">
+                <label class="form-label">Imágenes Actuales</label>
+                {% if noticia.poseeImg and noticia.imagenes %}
+                    <div id="carouselImagenes" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            {% for imagen in noticia.imagenes %}
+                                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                    <img src="{{ url_for('static', filename='uploads/' + imagen.archivo) }}" 
+                                         class="d-block w-100 img-fluid rounded mb-2" 
+                                         style="max-height: 650px; object-fit: cover;" 
+                                         alt="Imagen de la noticia">
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselImagenes" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Anterior</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselImagenes" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Siguiente</span>
+                        </button>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No hay imágenes asociadas</p>
+                {% endif %}
+                
+                <label for="imagenes" class="form-label">Agregar nuevas imágenes:</label>
+                <input type="file" class="form-control" id="imagenes" name="imagenes" accept="image/*" multiple>
+                
+                <!-- Checkbox para eliminar imágenes -->
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="eliminar_imagenes" name="eliminar_imagenes">
+                    <label class="form-check-label" for="eliminar_imagenes">
+                        ¿Eliminar todas las imágenes actuales?
+                    </label>
+                </div>
+            </div>
+
+            <!-- Video -->
+            <div class="mb-3">
+                <label class="form-label">Video Actual</label>
+                {% if noticia.video %}
+                    <video controls class="d-block rounded mb-2" style="max-width: 300px;">
+                        <source src="{{ url_for('static', filename='uploads/' + noticia.video) }}" type="video/mp4">
+                        Tu navegador no soporta el formato de video.
+                    </video>
+                {% else %}
+                    <p class="text-muted">No hay video asociado</p>
+                {% endif %}
+                
+                <label for="video" class="form-label">Subir nuevo video:</label>
+                <input type="file" class="form-control" id="video" name="video" accept="video/*">
+                
+                <!-- Checkbox para eliminar el video -->
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="eliminar_video" name="eliminar_video">
+                    <label class="form-check-label" for="eliminar_video">
+                        ¿Eliminar video actual?
+                    </label>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary w-100 me-2" id="guardarCambiosBtn">Guardar Cambios</button>
+                <a href="{{ url_for('admin.gestionar_noticias') }}" class="btn btn-secondary w-100">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Comentarios -->
+<div class="mb-3" style="margin-top: 40px;">
+    <h4>Comentarios</h4>
+
+    {% if noticia.comentarios %}
+        <ul class="list-group" id="listaComentarios">
+            {% for comentario in noticia.comentarios %}
+                <li class="list-group-item d-flex justify-content-between align-items-center comentario-item" id="comentario-{{ comentario.id }}">
+                    <div>
+                        <strong>{{ comentario.nombre }}</strong>: {{ comentario.texto }}
+                    </div>
+                    <button class="btn btn-danger btn-sm eliminar-comentario" data-id="{{ comentario.id }}">Eliminar</button>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted">No hay comentarios en esta noticia.</p>
+    {% endif %}
+</div>
+
+
+<!-- SweetAlert2 para confirmación -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Obtener los mensajes flash desde un atributo data en el body
+        let mensajes = JSON.parse(document.body.getAttribute("data-mensajes") || "[]");
+
+        if (mensajes.length > 0) {
+            mensajes.forEach(({ category, message }) => {
+                Swal.fire({
+                    icon: category,
+                    title: message,
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            });
+        }
+
+        document.querySelectorAll(".eliminar-comentario").forEach(boton => {
+            boton.addEventListener("click", function () {
+                let comentarioId = this.getAttribute("data-id");
+
+                Swal.fire({
+                    title: "¿Eliminar comentario?",
+                    text: "Esta acción no se puede deshacer.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6",
+                    confirmButtonText: "Sí, eliminar",
+                    cancelButtonText: "Cancelar"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`/comentario/eliminar/${comentarioId}`, { method: "POST" })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                document.getElementById(`comentario-${comentarioId}`).remove();
+                                Swal.fire("Eliminado", "El comentario ha sido eliminado.", "success");
+                            } else {
+                                Swal.fire("Error", "No se pudo eliminar el comentario.", "error");
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+    });
+
+    // Confirmación antes de enviar el formulario
+    document.getElementById("guardarCambiosBtn").addEventListener("click", function(event) {
+        event.preventDefault(); // Evita que se envíe el formulario inmediatamente
+
+        Swal.fire({
+            title: "¿Guardar cambios?",
+            text: "Los cambios sobrescribirán la noticia actual.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sí, guardar",
+            cancelButtonText: "Cancelar"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                event.target.closest("form").submit(); // Envía el formulario si el usuario confirma
+            }
+        });
+    });
+</script>
+{% endblock %}
